@@ -1,0 +1,7 @@
+[Unit]
+Description=Security metrics collectors (node-exporter textfile)
+
+[Service]
+Type=oneshot
+ExecStart=/opt/security-collectors/run-all.sh
+Nice=10

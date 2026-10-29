@@ -1,0 +1,26 @@
+# Template. Render with: scripts/render-alertmanager.sh
+# (substitutes ${TELEGRAM_CHAT_ID} from monitor/.env; the bot token is read from a file mounted into the container)
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: telegram
+  group_by: [alertname, instance]
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 4h
+
+receivers:
+  - name: telegram
+    telegram_configs:
+      - bot_token_file: /etc/alertmanager/secrets/telegram_bot_token
+        chat_id: ${TELEGRAM_CHAT_ID}
+        parse_mode: HTML
+        send_resolved: true
+        message: |
+          {{ range .Alerts }}{{ if eq .Status "firing" }}🚨 FIRING{{ else }}✅ RESOLVED{{ end }} <b>{{ .Labels.alertname }}</b> ({{ .Labels.severity }})
+          Host: {{ .Labels.instance }}
+          {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+
+          {{ end }}

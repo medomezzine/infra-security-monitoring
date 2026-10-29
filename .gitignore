@@ -1,0 +1,6 @@
+# Secrets and generated files
+monitor/.env
+monitor/secrets/*
+!monitor/secrets/.gitkeep
+monitor/alertmanager/alertmanager.yml
+*.log

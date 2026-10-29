@@ -1,0 +1,19 @@
+name: security-node
+
+# Deploy on BOTH VMs. Exposes host metrics plus the custom security metrics
+# written by the collectors into /var/lib/node_exporter/textfile_collector.
+
+services:
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: node-exporter
+    restart: unless-stopped
+    network_mode: host
+    pid: host
+    command:
+      - --path.rootfs=/host
+      - --web.listen-address=:9100
+      - --collector.textfile.directory=/textfile
+    volumes:
+      - /:/host:ro,rslave
+      - /var/lib/node_exporter/textfile_collector:/textfile:ro

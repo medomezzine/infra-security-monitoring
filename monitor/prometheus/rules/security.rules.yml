@@ -1,0 +1,39 @@
+groups:
+  - name: security
+    rules:
+      - alert: SSHBruteForceDetected
+        expr: security_ssh_failed_logins_5m > 10
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SSH brute-force suspected on {{ $labels.instance }}"
+          description: "{{ $value }} failed SSH logins in the last 5 minutes (threshold: 10)."
+
+      - alert: FirewallBlockSpike
+        expr: security_firewall_blocks_5m > 50
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Firewall block spike on {{ $labels.instance }}"
+          description: "{{ $value }} packets blocked by the firewall in the last 5 minutes (threshold: 50)."
+
+      - alert: SuspiciousProcessDetected
+        expr: sum by (instance) (security_process_anomalies) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Suspicious process on {{ $labels.instance }}"
+          description: "{{ $value }} process(es) running from a temp directory or matching the denylist."
+
+      # The TLS expiry metric is collected too. To alert on it, uncomment:
+      # - alert: TLSCertExpiringSoon
+      #   expr: security_tls_cert_expiry_seconds < 14 * 86400
+      #   for: 10m
+      #   labels:
+      #     severity: warning
+      #   annotations:
+      #     summary: "TLS certificate for {{ $labels.target }} expires soon"
+      #     description: "{{ $value | humanizeDuration }} left."

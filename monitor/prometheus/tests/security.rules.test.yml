@@ -1,0 +1,61 @@
+# Run: scripts/validate.sh   (or: promtool test rules monitor/prometheus/tests/security.rules.test.yml)
+rule_files:
+  - ../rules/security.rules.yml
+
+evaluation_interval: 30s
+
+tests:
+  - interval: 30s
+    input_series:
+      - series: 'security_ssh_failed_logins_5m{instance="vm2:9100"}'
+        values: "0 0 25 25 25 25 25"
+      - series: 'security_ssh_failed_logins_5m{instance="vm1:9100"}'
+        values: "0 0 0 0 0 0 0"
+    alert_rule_test:
+      - eval_time: 30s
+        alertname: SSHBruteForceDetected
+        exp_alerts: []
+      - eval_time: 3m
+        alertname: SSHBruteForceDetected
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              instance: "vm2:9100"
+            exp_annotations:
+              summary: "SSH brute-force suspected on vm2:9100"
+              description: "25 failed SSH logins in the last 5 minutes (threshold: 10)."
+
+  - interval: 30s
+    input_series:
+      - series: 'security_firewall_blocks_5m{instance="vm2:9100"}'
+        values: "0 0 120 120 120 120 120 120"
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: FirewallBlockSpike
+        exp_alerts: []
+      - eval_time: 4m
+        alertname: FirewallBlockSpike
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              instance: "vm2:9100"
+            exp_annotations:
+              summary: "Firewall block spike on vm2:9100"
+              description: "120 packets blocked by the firewall in the last 5 minutes (threshold: 50)."
+
+  - interval: 30s
+    input_series:
+      - series: 'security_process_anomalies{instance="vm2:9100",reason="exec_from_tmp"}'
+        values: "0 0 1 1 1 1"
+      - series: 'security_process_anomalies{instance="vm2:9100",reason="denylisted_name"}'
+        values: "0 0 0 0 0 0"
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SuspiciousProcessDetected
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              instance: "vm2:9100"
+            exp_annotations:
+              summary: "Suspicious process on vm2:9100"
+              description: "1 process(es) running from a temp directory or matching the denylist."
